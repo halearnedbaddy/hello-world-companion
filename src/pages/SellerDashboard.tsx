@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
+import * as supabaseApi from '@/services/supabaseApi';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useCurrency } from '@/hooks/useCurrency';
 import {
@@ -90,10 +91,10 @@ export function SellerDashboard() {
   // Share URL for Share modal (store link to copy)
   const shareUrl = storeData?.slug && typeof window !== 'undefined' ? `${window.location.origin}/store/${storeData.slug}` : '';
 
-  // Load wallet (for balance and withdrawal)
+  // Load wallet from Supabase (so escrow releases reflect immediately)
   useEffect(() => {
     async function loadWallet() {
-      const res = await api.getWallet();
+      const res = await supabaseApi.getWallet();
       if (res.success && res.data) {
         const w = res.data as any;
         setWallet({
@@ -304,7 +305,7 @@ export function SellerDashboard() {
   useEffect(() => {
     async function loadPaymentMethods() {
       if (activeTab === 'wallet' || withdrawalModal) {
-        const res = await api.getPaymentMethods();
+        const res = await supabaseApi.getPaymentMethods();
         if (res.success && res.data) {
           setPaymentMethods(Array.isArray(res.data) ? res.data : []);
         }
@@ -318,11 +319,11 @@ export function SellerDashboard() {
       alert('Please fill in all required fields');
       return;
     }
-    const res = await api.addPaymentMethod(payoutForm);
+    const res = await supabaseApi.addPaymentMethod(payoutForm);
     if (res.success) {
       setPayoutForm({ type: 'MOBILE_MONEY', provider: 'M-PESA', accountNumber: '', accountName: '', isDefault: false });
       setShowAddPayoutMethod(false);
-      const updatedRes = await api.getPaymentMethods();
+      const updatedRes = await supabaseApi.getPaymentMethods();
       if (updatedRes.success && updatedRes.data) {
         setPaymentMethods(Array.isArray(updatedRes.data) ? updatedRes.data : []);
       }
