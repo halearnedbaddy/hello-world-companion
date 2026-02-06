@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { XIcon } from '@/components/icons';
-import { api } from '@/services/api';
+import * as supabaseApi from '@/services/supabaseApi';
 import { useCurrency } from '@/hooks/useCurrency';
 
 interface PaymentMethod {
@@ -143,11 +143,11 @@ export function WithdrawalModal({
     setErrors({});
 
     try {
-      const res = await api.requestWithdrawal(amount, selectedMethod.id);
+      const res = await supabaseApi.requestWithdrawal(amount, selectedMethod.id);
 
       if (res.success) {
       handleClose();
-        alert(`✅ Withdrawal processed successfully!\n\nAmount: ${formatPrice(calculateFees(amount, selectedMethod).netAmount, 'KES')}\nMethod: ${selectedMethod.name}\nReference: ${res.data?.reference || `WD-${Date.now()}`}`);
+        alert(`✅ Withdrawal processed successfully!\n\nAmount: ${formatPrice(calculateFees(amount, selectedMethod).netAmount, 'KES')}\nMethod: ${selectedMethod.name}\nReference: ${(res.data as any)?.reference || `WD-${Date.now()}`}`);
       } else {
         setErrors({ general: res.error || 'Withdrawal failed. Please try again.' });
       }
