@@ -334,15 +334,13 @@ export function SellerDashboard() {
 
   useEffect(() => {
     async function loadPaymentMethods() {
-      if (activeTab === 'wallet' || withdrawalModal) {
-        const res = await supabaseApi.getPaymentMethods();
-        if (res.success && res.data) {
-          setPaymentMethods(Array.isArray(res.data) ? res.data : []);
-        }
+      const res = await supabaseApi.getPaymentMethods();
+      if (res.success && res.data) {
+        setPaymentMethods(Array.isArray(res.data) ? res.data : []);
       }
     }
     loadPaymentMethods();
-  }, [activeTab, withdrawalModal]);
+  }, []);
 
   const handleAddPayoutMethod = async () => {
     if (!payoutForm.accountNumber || !payoutForm.accountName) {
