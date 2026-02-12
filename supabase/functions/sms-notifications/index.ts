@@ -266,6 +266,14 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case 'payment_approved': {
+        const { transactionId, phone, message: smsMsg } = body;
+        if (phone && smsMsg) {
+          await sendSMS(phone, smsMsg, 'payment_approved', { transactionId });
+        }
+        break;
+      }
+
       default:
         return new Response(
           JSON.stringify({ success: false, error: 'Unknown action' }),
