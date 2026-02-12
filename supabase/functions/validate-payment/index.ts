@@ -213,6 +213,11 @@ Deno.serve(async (req) => {
       const platformFee = (tx.amount * feePercent) / 100;
       const sellerPayout = tx.amount - platformFee;
 
+      // Calculate auto-release date (7 days)
+      const autoReleaseDays = 7;
+      const autoReleaseDate = new Date();
+      autoReleaseDate.setDate(autoReleaseDate.getDate() + autoReleaseDays);
+
       const { error: updateErr } = await supabase
         .from("transactions")
         .update({
@@ -223,6 +228,8 @@ Deno.serve(async (req) => {
           paid_at: new Date().toISOString(),
           platform_fee: platformFee,
           seller_payout: sellerPayout,
+          escrow_status: "held",
+          auto_release_at: autoReleaseDate.toISOString(),
         })
         .eq("id", orderId);
 
@@ -232,19 +239,62 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Update seller wallet
-      const { error: rpcErr } = await supabase.rpc("increment_wallet_pending", {
-        p_user_id: tx.seller_id,
-        p_amount: sellerPayout,
-      });
-      if (rpcErr) {
-        // Fallback: direct update
-        const { data: w } = await supabase.from("wallets").select("*").eq("user_id", tx.seller_id).single();
-        if (w) {
-          await supabase.from("wallets").update({
-            pending_balance: (w.pending_balance || 0) + sellerPayout,
-          }).eq("user_id", tx.seller_id);
+      // Create escrow wallet entry
+      const walletRef = `ESC-${Date.now()}`;
+      const { data: escrowWallet } = await supabase
+        .from("escrow_wallets")
+        .insert({
+          wallet_ref: walletRef,
+          order_id: orderId,
+          gross_amount: tx.amount,
+          platform_fee: platformFee,
+          net_amount: sellerPayout,
+          currency: tx.currency || "KES",
+          status: "locked",
+          auto_release_date: autoReleaseDate.toISOString(),
+        })
+        .select()
+        .single();
+
+      // Link escrow wallet to transaction
+      if (escrowWallet) {
+        await supabase
+          .from("transactions")
+          .update({ escrow_wallet_id: escrowWallet.id })
+          .eq("id", orderId);
+
+        // Record in ledger
+        await supabase.from("ledger_entries").insert({
+          entry_ref: `LOCK-${Date.now()}`,
+          order_id: orderId,
+          transaction_type: "escrow_lock",
+          debit_account: "buyer",
+          credit_account: "escrow_pool",
+          amount: tx.amount,
+          description: `Escrow lock for approved order ${orderId}`,
+        });
+
+        // Update platform escrow pool balance
+        const { data: poolAccount } = await supabase
+          .from("platform_accounts")
+          .select("balance")
+          .eq("account_type", "escrow_pool")
+          .single();
+
+        if (poolAccount) {
+          await supabase
+            .from("platform_accounts")
+            .update({ balance: (poolAccount.balance || 0) + tx.amount })
+            .eq("account_type", "escrow_pool");
         }
+      }
+
+      // Update seller wallet pending balance
+      const { data: w } = await supabase.from("wallets").select("*").eq("user_id", tx.seller_id).single();
+      if (w) {
+        await supabase.from("wallets").update({
+          pending_balance: (w.pending_balance || 0) + sellerPayout,
+        }).eq("user_id", tx.seller_id);
       }
 
       // Log admin action
@@ -254,8 +304,22 @@ Deno.serve(async (req) => {
         details: { transaction_id: orderId, amount: tx.amount, fee: platformFee, notes: body.notes },
       });
 
+      // Send SMS to buyer confirming payment accepted
+      if (tx.buyer_phone) {
+        const smsMessage = `✅ PayLoom: Your payment of ${tx.currency || "KES"} ${tx.amount.toLocaleString()} for "${tx.item_name}" has been verified and accepted. Funds are held securely in escrow. Track: ${Deno.env.get("FRONTEND_URL") || "https://payloom.app"}/track/${orderId}`;
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/sms-notifications`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+            body: JSON.stringify({ action: "payment_approved", transactionId: orderId, phone: tx.buyer_phone, message: smsMessage }),
+          });
+        } catch (e) {
+          console.error("SMS send error:", e);
+        }
+      }
+
       return new Response(
-        JSON.stringify({ success: true, message: "Payment approved" }),
+        JSON.stringify({ success: true, message: "Payment approved and funds locked in escrow" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

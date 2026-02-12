@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
       // Update seller wallet
       const { data: order } = await serviceClient
         .from('transactions')
-        .select('seller_id, item_name, currency')
+        .select('seller_id, item_name, currency, buyer_phone')
         .eq('id', escrowWallet.order_id)
         .single();
 
@@ -346,14 +346,28 @@ Deno.serve(async (req) => {
             .eq('user_id', order.seller_id);
         }
 
-        // Notify seller
+        // Notify seller via in-app notification
         await serviceClient.from('notifications').insert({
           user_id: order.seller_id,
           type: 'withdrawal_processed',
           title: 'Funds Released! 💰',
-          message: `${order.currency || 'KES'} ${escrowWallet.net_amount.toLocaleString()} has been added to your wallet for "${order.item_name}".`,
+          message: `${order.currency || 'KES'} ${escrowWallet.net_amount.toLocaleString()} has been added to your wallet for "${order.item_name}". You can now withdraw.`,
           data: { transactionId: escrowWallet.order_id, amount: escrowWallet.net_amount }
         });
+
+        // Send SMS to seller to withdraw
+        const { data: sellerProfile } = await serviceClient
+          .from('profiles')
+          .select('phone')
+          .eq('user_id', order.seller_id)
+          .single();
+
+        if (sellerProfile?.phone) {
+          await sendBuyerSMS(
+            sellerProfile.phone,
+            `💰 PayLoom: ${order.currency || 'KES'} ${escrowWallet.net_amount.toLocaleString()} has been released for "${order.item_name}". Login to your dashboard to withdraw your funds now!`
+          );
+        }
       }
 
       return new Response(JSON.stringify({
