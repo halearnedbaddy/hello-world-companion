@@ -83,7 +83,7 @@ export function DisputeDashboard({ userType }: DisputeDashboardProps) {
             {disputes.length} total • {disputes.filter(d => d.status === 'open').length} open
           </p>
         </div>
-        {userType === 'CUSTOMER' && (
+        {(userType === 'CUSTOMER' || userType === 'SELLER') && (
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-semibold hover:bg-destructive/90 transition"

@@ -11,7 +11,7 @@ import {
   ChevronRightIcon, BellIcon, XIcon, CheckCircleIcon, ClockIcon,
   ArrowUpRightIcon, ArrowDownLeftIcon, CameraIcon, MenuIcon, LinkIcon
 } from '@/components/icons';
-import { DisputesManagement } from '@/components/DisputesManagement';
+import { DisputeDashboard } from '@/components/dispute/DisputeDashboard';
 import { OrdersTab } from '@/components/OrdersTab';
 import StatusBadge from '@/components/StatusBadge';
 import { WithdrawalModal } from '@/components/WithdrawalModal';
@@ -624,7 +624,7 @@ export function SellerDashboard() {
   );
 
   // DISPUTES TAB
-  const renderDisputes = () => <DisputesManagement />;
+  const renderDisputes = () => <DisputeDashboard userType="SELLER" />;
 
   // SOCIAL TAB
   const [socialAccounts, setSocialAccounts] = useState<any[]>([]);

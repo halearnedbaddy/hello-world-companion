@@ -556,19 +556,57 @@ export async function getWallet() {
 }
 
 export async function getPaymentMethods() {
-  // payment_methods table not yet created - return empty
-  return { success: true, data: [] as any[] };
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { success: false, error: "Not authenticated" };
+
+  const { data, error } = await supabase
+    .from("payment_methods")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .order("is_default", { ascending: false });
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: (data || []).map((m: any) => ({
+    id: m.id,
+    type: m.type,
+    provider: m.provider,
+    accountNumber: m.account_number,
+    accountName: m.account_name,
+    isDefault: m.is_default,
+    isActive: m.is_active,
+    country: m.country,
+    paymentType: m.payment_type,
+    methodName: m.method_name,
+  })) };
 }
 
-export async function addPaymentMethod(_data: {
+export async function addPaymentMethod(data: {
   type: string;
   provider: string;
   accountNumber: string;
   accountName: string;
   isDefault?: boolean;
 }) {
-  // payment_methods table not yet created - stub
-  return { success: false, error: "Payment methods not yet available" };
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { success: false, error: "Not authenticated" };
+
+  // Map type string to DB enum
+  const dbType = data.type === "BANK_TRANSFER" ? "bank_account" : "mobile_money";
+
+  const { error } = await supabase.from("payment_methods").insert({
+    user_id: session.user.id,
+    type: dbType,
+    provider: data.provider,
+    account_number: data.accountNumber,
+    account_name: data.accountName,
+    is_default: data.isDefault ?? false,
+    is_active: true,
+    payment_type: data.type,
+    method_name: data.provider,
+  } as any);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
 }
 
 export async function requestWithdrawal(amount: number, paymentMethodId: string) {
