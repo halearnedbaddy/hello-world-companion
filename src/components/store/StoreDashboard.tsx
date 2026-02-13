@@ -4,7 +4,7 @@ import { StoreOverview } from './StoreOverview';
 import { StoreAnalytics } from './StoreAnalytics';
 import { StoreProducts } from './StoreProducts';
 import { StoreOrders } from './StoreOrders';
-import { MyStorefront } from './MyStorefront';
+
 import { StoreSettings } from './StoreSettings';
 import { Menu, X, Bell, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,25 +25,105 @@ interface StoreDashboardProps {
   onBack: () => void;
 }
 
+function PlaceholderTab({ title }: { title: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+        <span className="text-2xl">🚧</span>
+      </div>
+      <h2 className="text-xl font-semibold text-foreground mb-2">{title}</h2>
+      <p className="text-sm text-muted-foreground max-w-md">
+        This section is coming soon. We're working hard to bring you this feature.
+      </p>
+    </div>
+  );
+}
+
 export function StoreDashboard({ store, onStoreUpdate, onBack }: StoreDashboardProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<StoreTab>('overview');
+  const [activeTab, setActiveTab] = useState<StoreTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'overview':
+      case 'dashboard':
         return <StoreOverview storeName={store.name} storeSlug={store.slug} storeId={store.id} onNavigate={(tab) => setActiveTab(tab as StoreTab)} />;
-      case 'analytics':
-        return <StoreAnalytics />;
-      case 'products':
-        return <StoreProducts storeSlug={store.slug} />;
       case 'orders':
         return <StoreOrders />;
-      case 'my-store':
-        return <MyStorefront storeSlug={store.slug} storeName={store.name} />;
-      case 'settings':
+      case 'products':
+      case 'products-all':
+        return <StoreProducts storeSlug={store.slug} />;
+      case 'products-categories':
+        return <PlaceholderTab title="Categories" />;
+      case 'products-bulk':
+        return <PlaceholderTab title="Bulk Operations" />;
+      case 'products-recommendations':
+        return <PlaceholderTab title="Recommendations Engine" />;
+      case 'inventory':
+      case 'inventory-stock':
+        return <PlaceholderTab title="Stock Management" />;
+      case 'inventory-locations':
+        return <PlaceholderTab title="Locations" />;
+      case 'inventory-reorder':
+        return <PlaceholderTab title="Reorder Management" />;
+      case 'customers':
+      case 'customers-all':
+        return <PlaceholderTab title="All Customers" />;
+      case 'customers-segments':
+        return <PlaceholderTab title="Customer Segments" />;
+      case 'marketing':
+      case 'marketing-email':
+        return <PlaceholderTab title="Email Campaigns" />;
+      case 'marketing-sms':
+        return <PlaceholderTab title="SMS Marketing" />;
+      case 'marketing-cart-recovery':
+        return <PlaceholderTab title="Cart Recovery" />;
+      case 'marketing-loyalty':
+        return <PlaceholderTab title="Loyalty Program" />;
+      case 'marketing-discounts':
+        return <PlaceholderTab title="Discounts & Promotions" />;
+      case 'marketing-social':
+        return <PlaceholderTab title="Social Media" />;
+      case 'analytics':
+      case 'analytics-overview':
+        return <StoreAnalytics />;
+      case 'analytics-forecasting':
+        return <PlaceholderTab title="Forecasting" />;
+      case 'analytics-customer-insights':
+        return <PlaceholderTab title="Customer Insights" />;
+      case 'analytics-market-intelligence':
+        return <PlaceholderTab title="Market Intelligence" />;
+      case 'analytics-custom-reports':
+        return <PlaceholderTab title="Custom Reports" />;
+      case 'financial':
+      case 'financial-accounting':
+        return <PlaceholderTab title="Accounting" />;
+      case 'financial-tax':
+        return <PlaceholderTab title="Tax Settings" />;
+      case 'financial-payment-options':
+        return <PlaceholderTab title="Payment Options" />;
+      case 'financial-health':
+        return <PlaceholderTab title="Financial Health" />;
+      case 'live-chat':
+        return <PlaceholderTab title="Live Chat" />;
+      case 'reviews':
+        return <PlaceholderTab title="Reviews" />;
+      case 'store-settings':
+      case 'store-settings-general':
         return <StoreSettings store={store} onUpdate={onStoreUpdate} />;
+      case 'store-settings-domain':
+        return <PlaceholderTab title="Domain Settings" />;
+      case 'store-settings-languages':
+        return <PlaceholderTab title="Languages" />;
+      case 'store-settings-invoices':
+        return <PlaceholderTab title="Invoice Templates" />;
+      case 'support':
+      case 'support-help':
+        return <PlaceholderTab title="Help Center" />;
+      case 'support-tickets':
+        return <PlaceholderTab title="Support Tickets" />;
+      case 'support-account-manager':
+        return <PlaceholderTab title="Account Manager" />;
       default:
         return <StoreOverview storeName={store.name} />;
     }
@@ -57,7 +137,7 @@ export function StoreDashboard({ store, onStoreUpdate, onBack }: StoreDashboardP
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setSidebarOpen(!sidebarOpen)} 
-              className="md:hidden text-foreground p-2 hover:bg-muted rounded-null transition"
+              className="md:hidden text-foreground p-2 hover:bg-muted rounded transition"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
