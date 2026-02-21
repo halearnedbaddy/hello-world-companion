@@ -34,6 +34,7 @@ import {
   User,
   ChevronDown,
   Shield,
+  Banknote,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -51,6 +52,7 @@ const managementItems = [
 
 const systemItems = [
   { title: "Revenue", url: "/admin/revenue", icon: DollarSign },
+  { title: "Payouts", url: "/admin/payouts", icon: Banknote },
   { title: "Notifications", url: "/admin/notifications", icon: Bell },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];

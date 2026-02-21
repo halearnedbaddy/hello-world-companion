@@ -55,6 +55,7 @@ const apiItems = [
 ];
 
 const accountItems = [
+  { title: "Payouts", url: "/dashboard/payouts", icon: Banknote, badge: "NEW", badgeColor: "bg-primary text-white" },
   { title: "Compliance", url: "/dashboard/compliance", icon: FileText, badge: "!", badgeColor: "bg-destructive text-white" },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
   { title: "Reports", url: "/dashboard/reports", icon: BarChart3 },
