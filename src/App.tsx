@@ -32,6 +32,8 @@ import DashboardConditions from "./pages/DashboardConditions";
 import DashboardDisbursement from "./pages/DashboardDisbursement";
 import DashboardReports from "./pages/DashboardReports";
 import DashboardSupport from "./pages/DashboardSupport";
+import DashboardPayouts from "./pages/DashboardPayouts";
+import AdminPayouts from "./pages/admin/AdminPayouts";
 
 const queryClient = new QueryClient();
 
@@ -129,6 +131,16 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/payouts"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <DashboardPayouts />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/support"
               element={
                 <ProtectedRoute>
@@ -216,6 +228,17 @@ const App = () => (
                 <AdminRoute>
                   <AdminLayout>
                     <AdminRevenue />
+                  </AdminLayout>
+                </AdminRoute>
+              }
+            />
+            
+            <Route
+              path="/admin/payouts"
+              element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <AdminPayouts />
                   </AdminLayout>
                 </AdminRoute>
               }
