@@ -22,6 +22,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminRevenue from "./pages/admin/AdminRevenue";
 import DashboardOverview from "./pages/DashboardOverview";
 import DashboardSettings from "./pages/DashboardSettings";
 import DashboardCompliance from "./pages/DashboardCompliance";
@@ -205,6 +206,16 @@ const App = () => (
                 <AdminRoute>
                   <AdminLayout>
                     <AdminSettings />
+                  </AdminLayout>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/revenue"
+              element={
+                <AdminRoute>
+                  <AdminLayout>
+                    <AdminRevenue />
                   </AdminLayout>
                 </AdminRoute>
               }
